@@ -30,19 +30,19 @@ resource "libvirt_volume" "os-volumes" {
   name           = "${var.project-prefix}-${each.key}-os-volumme.qcow2"
   base_volume_id = libvirt_volume.instance-base-image.id
   pool           = libvirt_pool.data-pool.name
-  size           = 50 * 1024 * 1024 * 1024 ## 50G 
+  size           = 50 * 1024 * 1024 * 1024 ## 50G
 }
 resource "libvirt_volume" "additional-volumes-001" {
   for_each = var.instances-type-001
   name     = "${each.key}-additional-volume-001"
-  size     = 30 * 1024 * 1024 * 1024 ## 30G 
+  size     = 30 * 1024 * 1024 * 1024 ## 30G
   pool     = libvirt_pool.data-pool.name
 }
 
 resource "libvirt_volume" "additional-volumes-002" {
   for_each = var.instances-type-001
   name     = "${each.key}-additional-volume-002"
-  size     = 30 * 1024 * 1024 * 1024 ## 30G 
+  size     = 30 * 1024 * 1024 * 1024 ## 30G
   pool     = libvirt_pool.data-pool.name
 }
 
@@ -93,6 +93,13 @@ resource "libvirt_domain" "test-instance" {
   network_interface {
     network_id     = libvirt_network.internal-network-2.id
     addresses      = ["${var.internal-network-2-network-addr}.${each.value.ip}"]
+    mac            = "aa:bb:cc:${substr(local.mac_prefix, 0, 2)}:${substr(local.mac_prefix, 2, 2)}:${each.value.ip}"
+    wait_for_lease = true
+  }
+
+  network_interface {
+    network_id     = libvirt_network.internal-network-3.id
+    addresses      = ["${var.internal-network-3-network-addr}.${each.value.ip}"]
     mac            = "aa:bb:cc:${substr(local.mac_prefix, 0, 2)}:${substr(local.mac_prefix, 2, 2)}:${each.value.ip}"
     wait_for_lease = true
   }
