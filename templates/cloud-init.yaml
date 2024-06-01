@@ -2,6 +2,7 @@
 ssh_pwauth: true
 timezone: "Asia/Seoul"
 disable_root: false
+hostname: "${hostname}"
 users:
   - default
   - name: root
@@ -31,6 +32,23 @@ write_files:
      set hlsearch
      colorscheme elflord
    append: true
+ - path: /etc/netplan/50-cloud-init.yaml
+   content: |
+     network:
+       version: 2
+       ethernets:
+         ens3:
+           dhcp4: true
+           dhcp6: false
+         ens4:
+           dhcp4: true
+           dhcp6: false
+         ens5:
+           dhcp4: true
+           dhcp6: false
+         ens6:
+           dhcp4: true
+           dhcp6: false
 ssh_keys:
   rsa_private: |
 ${ssh_private_key}
@@ -38,7 +56,11 @@ packages:
   - vim
   - git 
   - wget
+  - python3-pip
+  - btop
 runcmd:
+## Replace Nic 
+  - ['netplan', 'apply']
   - ['wget', 'https://raw.githubusercontent.com/huyz/dircolors-solarized/master/dircolors.ansi-light', '-O',  '/root/.dircolors']
 package_update: false
-package_reboot_if_required: false
+package_reboot_if_required: true

@@ -10,7 +10,8 @@ variable "data-pool-dir" {
 }
 
 variable "base-image-path" {
-  default     = "/data/images/Rocky-9-GenericCloud.latest.x86_64.qcow2"
+ // default     = "/data/images/Rocky-9-GenericCloud.latest.x86_64.qcow2"
+  default     = "/data/images/jammy-server-cloudimg-amd64.img"
   description = "Path/URL for Cloud Qcow2 Image"
 }
 
@@ -44,9 +45,8 @@ variable "instances-type-001" {
     vcpu   = number
   }))
   default = {
-    "test-011" = { ip = "11", memory = "2048", vcpu = 2 }
-    "test-012" = { ip = "12", memory = "2048", vcpu = 2 }
-  }
+    "test-090" = { ip = "90", memory = "8000", vcpu = 4}
+}
 }
 
 // Type 2 Instances: "Only OS volumes"
@@ -58,8 +58,12 @@ variable "instances-type-002" {
     vcpu   = number
   }))
   default = {
-    "test-031" = { ip = "31", memory = "4096", vcpu = 4 }
-    "test-032" = { ip = "32", memory = "4096", vcpu = 4 }
+    "test-091" = { ip = "91", memory = "6000", vcpu = 3 }
+    "test-092" = { ip = "92", memory = "6000", vcpu = 3 }
+    "test-093" = { ip = "93", memory = "6000", vcpu = 3 }
+    "test-094" = { ip = "94", memory = "6000", vcpu = 3 }
+    "test-095" = { ip = "95", memory = "6000", vcpu = 3 }
+    "test-096" = { ip = "96", memory = "6000", vcpu = 3 }
   }
 }
 
@@ -71,14 +75,14 @@ variable "ssh_username" {
 variable "ssh-public-key" {
   type = list(string)
   default = [
-    "ssh-rsa EDITME root@EDITME"
+    "ssh-rsa #######"
   ]
 }
 
 variable "ssh-private-key" {
   default = <<EOF
-    -----BEGIN RSA PRIVATE KEY-----
-    EDITMEEDITMEEDITMEEDITMEEDITMEEDITMEEDITMEEDITMEEDITMEEDITMEEDITME
-    -----END RSA PRIVATE KEY-----
+    -----BEGIN OPENSSH PRIVATE KEY-----
+    b3BlbnNzaC#####
+    -----END OPENSSH PRIVATE KEY-----
 EOF
 }

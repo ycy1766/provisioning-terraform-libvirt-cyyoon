@@ -11,7 +11,7 @@ data "template_file" "cloudinit-kvm-instance" {
   for_each = local.combined_instances
   template = file("${path.module}/templates/cloud-init.yaml")
   vars = {
-    # external-network-1-network-addr = var.external-network-1-network-addr
+    hostname        = "${var.project-prefix}-${each.key}"
     ssh_username    = var.ssh_username
     ssh_public_key  = join("\n", formatlist("    - %s", var.ssh-public-key))
     ssh_private_key = var.ssh-private-key
@@ -21,7 +21,7 @@ data "template_file" "cloudinit-kvm-instance" {
 resource "libvirt_cloudinit_disk" "commoninit" {
   for_each  = local.combined_instances
   name      = "${var.project-prefix}-${each.key}-commoninit.iso"
-  user_data = data.template_file.cloudinit-kvm-instance["${each.key}"].rendered
+  user_data = data.template_file.cloudinit-kvm-instance[each.key].rendered
   pool      = libvirt_pool.data-pool.name
 }
 
@@ -32,19 +32,20 @@ resource "libvirt_volume" "os-volumes" {
   pool           = libvirt_pool.data-pool.name
   size           = 50 * 1024 * 1024 * 1024 ## 50G
 }
+
 resource "libvirt_volume" "additional-volumes-001" {
   for_each = var.instances-type-001
   name     = "${each.key}-additional-volume-001"
-  size     = 30 * 1024 * 1024 * 1024 ## 30G
+  size     = 50 * 1024 * 1024 * 1024 ## 30G
   pool     = libvirt_pool.data-pool.name
 }
 
-resource "libvirt_volume" "additional-volumes-002" {
-  for_each = var.instances-type-001
-  name     = "${each.key}-additional-volume-002"
-  size     = 30 * 1024 * 1024 * 1024 ## 30G
-  pool     = libvirt_pool.data-pool.name
-}
+# resource "libvirt_volume" "additional-volumes-002" {
+#   for_each = var.instances-type-001
+#   name     = "${each.key}-additional-volume-002"
+#   size     = 30 * 1024 * 1024 * 1024 ## 30G
+#   pool     = libvirt_pool.data-pool.name
+# }
 
 resource "libvirt_domain" "test-instance" {
   for_each = local.combined_instances
@@ -56,10 +57,10 @@ resource "libvirt_domain" "test-instance" {
     mode = "host-passthrough"
   }
 
-  cloudinit = libvirt_cloudinit_disk.commoninit["${each.key}"].id
+  cloudinit = libvirt_cloudinit_disk.commoninit[each.key].id
 
   disk {
-    volume_id = libvirt_volume.os-volumes["${each.key}"].id
+    volume_id = libvirt_volume.os-volumes[each.key].id
   }
 
   dynamic "disk" {
@@ -68,44 +69,45 @@ resource "libvirt_domain" "test-instance" {
       volume_id = libvirt_volume.additional-volumes-001[each.key].id
     }
   }
-  dynamic "disk" {
-    for_each = contains(keys(var.instances-type-001), each.key) ? [1] : []
-    content {
-      volume_id = libvirt_volume.additional-volumes-002[each.key].id
-    }
-  }
+
+  # dynamic "disk" {
+  #   for_each = contains(keys(var.instances-type-001), each.key) ? [1] : []
+  #   content {
+  #     volume_id = libvirt_volume.additional-volumes-002[each.key].id
+  #   }
+  # }
 
   network_interface {
     network_id     = libvirt_network.external-network-1.id
     hostname       = "${var.project-prefix}-${each.key}"
     addresses      = ["${var.external-network-1-network-addr}.${each.value.ip}"]
-    mac            = "aa:bb:cc:${substr(local.mac_prefix, 0, 2)}:${substr(local.mac_prefix, 2, 2)}:${each.value.ip}"
+    mac            = "aa:bb:c1:${substr(local.mac_prefix, 0, 2)}:${substr(local.mac_prefix, 2, 2)}:${format("%02x", each.value.ip)}"
     wait_for_lease = true
   }
 
-  network_interface {
+ network_interface {
     network_id     = libvirt_network.internal-network-1.id
     addresses      = ["${var.internal-network-1-network-addr}.${each.value.ip}"]
-    mac            = "aa:bb:cc:${substr(local.mac_prefix, 0, 2)}:${substr(local.mac_prefix, 2, 2)}:${each.value.ip}"
+    mac            = "aa:bb:c2:${substr(local.mac_prefix, 0, 2)}:${substr(local.mac_prefix, 2, 2)}:${each.value.ip}"
     wait_for_lease = true
   }
 
   network_interface {
     network_id     = libvirt_network.internal-network-2.id
     addresses      = ["${var.internal-network-2-network-addr}.${each.value.ip}"]
-    mac            = "aa:bb:cc:${substr(local.mac_prefix, 0, 2)}:${substr(local.mac_prefix, 2, 2)}:${each.value.ip}"
+    mac            = "aa:bb:c3:${substr(local.mac_prefix, 0, 2)}:${substr(local.mac_prefix, 2, 2)}:${each.value.ip}"
     wait_for_lease = true
   }
 
   network_interface {
     network_id     = libvirt_network.internal-network-3.id
     addresses      = ["${var.internal-network-3-network-addr}.${each.value.ip}"]
-    mac            = "aa:bb:cc:${substr(local.mac_prefix, 0, 2)}:${substr(local.mac_prefix, 2, 2)}:${each.value.ip}"
+    mac            = "aa:bb:c4:${substr(local.mac_prefix, 0, 2)}:${substr(local.mac_prefix, 2, 2)}:${each.value.ip}"
     wait_for_lease = true
   }
 
   graphics {
-    type        = "spice"
+    type        = "vnc"
     listen_type = "address"
   }
 
@@ -127,4 +129,5 @@ resource "libvirt_domain" "test-instance" {
       "echo 'test cycy' > /tmp/test.txt"
     ]
   }
+
 }
